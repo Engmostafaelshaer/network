@@ -1,0 +1,125 @@
+beta 
+
+ena
+config t
+int gig 0/0
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+int gig 0/1
+ip address 192.168.3.1 255.255.255.0
+no shutdown
+router rip
+version 2
+no auto summary
+network 192.168.1.0 
+network 192.168.3.0 
+
+
+gamma
+
+ena
+config t
+router rip
+version 2
+no auto summary
+network 192.168.3.0
+redistribute ospf 100 metric 1
+router ospf 100
+network 192.168.4.0 0.0.0.255 area 0
+redistribute rip metric 1
+do wr
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+delta
+
+ena
+config t
+int gig 0/0/0
+ip address 192.168.4.2 255.255.255.0
+no shutdown
+int gig 0/0/1
+ip address 192.168.5.1 255.255.255.0
+no shutdown
+router ospf 100
+network 192.168.4.0 0.0.0.255 area 0
+network 192.168.5.0 0.0.0.255 area 0
+network 1.1.1.1 0.0.0.0 area 0
+exit
+int loopback 0
+ip address 1.1.1.1 255.255.255.255
+router ospf 100
+router-id 1.1.1.1
+
+router 5 (Backbone)
+
+ena
+config t
+ena
+config t
+int gig 0/0/0
+ip address 192.168.5.2 255.255.255.0
+no shutdown
+int gig 0/0/1
+ip address 192.168.7.2 255.255.255.0
+no shutdown
+router ospf 1
+network 192.168.5.0 0.0.0.255 area 0
+network 192.168.7.0 0.0.0.255 area 1
+router-id 3.3.3.3
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+zeta 
+
+ena
+config t
+int gig 0/0/0
+ip address 192.168.7.1 255.255.255.0
+no shutdown
+int gig 0/0/1
+ip address 192.168.6.1 255.255.255.0
+no shutdown
+router ospf 1
+network 192.168.7.0 0.0.0.255 area 1
+network 192.168.6.0 0.0.0.255 area 1
+network 2.2.2.2 0.0.0.0 area 1
+exit
+int loopback 0
+ip address 2.2.2.2 255.255.255.255
+
+
+
+

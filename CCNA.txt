@@ -1,0 +1,382 @@
+
+sw a
+
+ena
+config t
+vtp mode server
+vtp domain mega
+vtp password 123
+int f0/1
+switchport access vlan 10
+vlan 10
+name hr
+int f0/2
+switchport access vlan 20
+vlan 20
+name sec
+int f0/3
+switchport access vlan 30
+vlan 30
+name eng
+int range f0/4-5
+switchport mode trunk 
+interface fa0/1
+switchport mode access
+switchport port-security
+switchport port-security maximum 1
+switchport port-security mac-address sticky
+switchport port-security violation shutdown
+exit
+interface fa0/2
+switchport mode access
+switchport port-security
+switchport port-security maximum 1
+switchport port-security mac-address sticky
+switchport port-security violation protect
+exit
+interface fa0/3
+switchport mode access
+switchport port-security
+switchport port-security maximum 1
+switchport port-security mac-address sticky
+switchport port-security violation restrict
+exit
+do wr
+
+sw b
+
+ena
+config t
+vtp mode client
+vtp domain mega
+vtp password 123
+int f0/1
+switchport access vlan 10
+int f0/2
+switchport access vlan 20
+int f0/3
+switchport access vlan 30
+int f0/4
+switchport mode trunk 
+int f0/5
+switchport mode trunk 
+do wr
+
+multisw
+
+ena 
+config t
+interface f0/1
+switchport trunk encapsulation dot1q
+switchport mode trunk
+interface f0/2
+switchport trunk encapsulation dot1q
+switchport mode trunk
+interface vlan 10
+ip address 192.168.1.1 255.255.255.248
+no shutdown
+interface vlan 20
+ip address 192.168.1.9 255.255.255.248
+no shutdown
+interface vlan 30
+ip address 192.168.10.18 255.255.255.248
+no shutdown
+interface f0/3
+no switchport 
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+interface f0/4
+no switchport 
+ip address 192.168.6.1 255.255.255.0
+no shutdown
+ip routing
+ip route 0.0.0.0 0.0.0.0 f0/4
+ip route 0.0.0.0 0.0.0.0 f0/3
+ip dhcp snooping
+ip dhcp snooping vlan 10
+ip dhcp snooping vlan 20
+ip dhcp snooping vlan 30
+int fa 0/4
+ip dhcp snooping trust
+int fa 0/1
+no ip dhcp snooping trust
+int fa 0/2
+no ip dhcp snooping trust
+do wr
+
+
+router alfa
+
+ena
+config t
+interface gig 0/0/0
+ip address 192.168.1.2 255.255.255.0
+no shutdown
+interface gig 0/0/1
+ip address 192.168.2.1 255.255.255.0
+no shutdown
+router ospf 50
+network 192.168.1.0 0.0.0.255 area 0
+network 192.168.2.0 0.0.0.255 area 0
+interface gig 0/0/1
+standby 5 ip 192.168.1.80
+do wr
+
+router beta 
+ena
+config t
+interface gig 0/0/0
+ip address 192.168.2.2 255.255.255.0
+no shutdown
+interface gig 0/1/0
+ip address 192.168.14.1 255.255.255.0
+no shutdown
+interface gig 0/1/1
+ip address 192.168.7.1 255.255.255.0
+no shutdown
+interface gig 0/0/1
+ip address 192.168.3.1 255.255.255.0
+no shutdown
+router ospf 50
+network 192.168.2.0 0.0.0.255 area 0
+network 192.168.14.0 0.0.0.255.0 area 0
+network 192.168.7.0 0.0.0.255.0 area 0
+network 192.168.3.0 0.0.0.255 area 0
+interface gigabitEthernet 0/0/1
+ip nat outside
+exit
+ip nat inside source static 192.168.1.2 20.1.1.5
+ip nat inside source static 192.168.1.10 20.1.1.6
+ip nat inside source static 192.168.1.17 20.1.1.7
+exit
+do wr
+
+router gamma
+
+ena
+config t
+interface gig 0/0/0
+ip address 192.168.3.2 255.255.255.0
+no shutdown
+interface gig 0/0/1
+ip address 192.168.12.1 255.255.255.0
+no shutdown
+interface gig 0/1/0
+ip address 192.168.16.2 255.255.255.0
+no shutdown
+router ospf 50
+network 192.168.3.0 0.0.0.255 area 0
+network 192.168.16.0 0.0.0.255 area 0
+redistribute rip metric 1
+router rip 
+network 192.168.12.1 
+redistribute ospf 50 metric 1
+interface gigabitEthernet  0/0/0
+ip nat outside
+exit
+interface gigabitEthernet 0/1/0
+ip nat inside
+ip nat pool pat 20.1.1.7 20.1.1.8 netmask 255.255.255.0
+ip nat inside source list 1 pool pat overload
+access-list 1 permit 192.168.2.0 0.0.0.255
+do wr
+
+
+
+
+router sa
+
+ena
+config t
+interface gig 0/0/0
+ip address 192.168.6.2 255.255.255.0
+no shutdown
+ip helper 192.168.17.1
+exit
+interface gig 0/0/1
+ip address 192.168.18.1 255.255.255.0
+no shutdown
+exit
+interface gig 0/1/0
+ip address 192.168.14.2 255.255.255.0
+no shutdown
+exit
+interface gig 0/1/1
+ip address 192.168.17.1 255.255.255.0
+no shutdown
+exit
+router ospf 50
+network 192.168.18.0 0.0.0.255 area 0
+network 192.168.6.0 0.0.0.255 area 0
+network 192.168.14.0 0.0.0.255 area 0
+network 192.168.17.0 0.0.0.255 area 0
+interface gig 0/0/1
+standby 5 ip 192.168.1.80
+exit
+
+
+
+
+
+
+
+
+
+
+
+
+------------------------------------------------------------------
+
+router voip phone
+
+enable
+config t
+
+interface fa 0/0
+ ip address 192.168.7.2 255.255.255.0
+ no shutdown
+ exit
+interface fa 0/1
+ ip address 192.168.15.1 255.255.255.0
+ no shutdown
+ exit
+router ospf 50
+ network 192.168.7.0 0.0.0.255 area 0
+ip dhcp pool voice
+ network 192.168.15.0 255.255.255.0
+ default-router 192.168.15.1
+ option 150 ip 192.168.15.1
+ exit
+telephony-service
+ max-dn 3
+ max-ephones 2
+ ip source-address 192.168.1.18 port 2000
+ auto assign 1 to 2
+ exit
+ephone-dn 1
+ number 111
+ exit
+ephone 1
+ type 7960
+ button 1:1
+ephone-dn 2
+ number 122
+ exit
+ephone 2
+ button 1:2
+ exit
+dial-peer voice 1 voip
+destination-pattern 2..
+session target ipv4:192.168.13.1
+
+
+sw 4
+ena
+config t
+int range f0/2-3
+switchport voice vlan 1
+do wr
+
+
+router voip analog
+
+ena
+config t
+interface fa 0/0
+ip address 192.168.12.2 255.255.255.0
+no shutdown
+interface fa 0/1
+ip address 192.168.13.1 255.255.255.0
+no shutdown
+router rip
+version 2
+no auto summary
+network 192.168.12.0
+ip dhcp pool voice
+ network 192.168.13.0 255.255.255.0
+ default-router 192.168.13.1
+ option 150 ip 192.168.13.1
+ exit
+telephony-service
+max-dn 3
+max-ephones 3
+ip source-address 192.168.1.18 port 2000
+auto assign 1 to 2
+exit
+ephone-dn 1
+number 211
+exit
+ephone 1
+button 1:1
+exit
+ephone-dn 2
+number 212
+exit
+ephone 2
+type 7960
+button 1:2
+exit
+dial-peer voice 1 voip
+destination-pattern 1..
+session target ipv4:192.168.15.1
+
+sw voip 
+
+ena
+config t
+int range f0/2-3
+switchport voice vlan 1
+do wr
+
+
+server
+
+ena
+config t
+interface gig 0/0/0
+ip address 192.168.16.1 255.255.255.0
+no shutdown
+interface gig 0/0/1
+ip address 192.168.11.1 255.255.255.0
+no shutdown
+router ospf 50
+network 192.168.11.2 0.0.0.255 area 0
+ip access-list extended SERVER-FILTER
+deny ip host 192.168.1.10 host 192.168.11.2
+permit ip host 192.168.1.17 host 192.168.11.2
+permit ip host 192.168.1.2 host 192.168.11.2
+permit ip any any
+exit
+interface g0/0/0
+ip access-group SERVER-FILTER in
+end
+do wr
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+------------------------------------------------------
+vlan
+inter vlan
+vtp
+VLSM
+voip
+rip
+ospf
+redistribution (rip+ospf)
+redundancy protocol
+multiswitch
+ NAT
+DHCP 
+DHCP snooping
+security port
